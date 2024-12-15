@@ -207,63 +207,64 @@
   </div>
 
   <script>
-    const codeInput = document.getElementById("code-input");
-    const lineNumbers = document.getElementById("line-numbers");
-    const outputContent = document.getElementById("output-content");
-    const compileButton = document.getElementById("compile-button");
-    const clearButton = document.getElementById("clear-output");
-    const highlightLineDiv = document.querySelector(".highlight-line");
-    
-    function updateLineNumbers() {
-      const lines = codeInput.value.split("\n").length;
-      lineNumbers.innerHTML = '';
-      for (let i = 1; i <= lines; i++) {
-        const line = document.createElement('div');
-        line.textContent = i;
-        lineNumbers.appendChild(line);
-      }
-      syncScroll();
-    }
-    
-    codeInput.addEventListener("input", updateLineNumbers);
-    
-    function highlightLine() {
-      const start = codeInput.selectionStart;
-      const startLine = codeInput.value.substring(0, start).split("\n").length - 1;
-    
-      const lineHeight = parseFloat(getComputedStyle(codeInput).lineHeight);
-      const scrollOffset = codeInput.scrollTop;
-      const topOffset = startLine * lineHeight - scrollOffset;
-    
-      highlightLineDiv.style.top = `${topOffset + 7}px`;
-      highlightLineDiv.style.height = `${lineHeight + 2}px`;
-    }
-    
-    codeInput.addEventListener("scroll", () => {
-      syncScroll();
-      highlightLine();
-    });
-    
-    function syncScroll() {
-      lineNumbers.scrollTop = codeInput.scrollTop;
-    }
-    
-    codeInput.addEventListener("click", highlightLine);
-    codeInput.addEventListener("keyup", highlightLine);
-    
-    window.addEventListener("load", () => {
-      const savedCode = localStorage.getItem("miniDelCode");
-      if (savedCode) codeInput.value = savedCode;
-      updateLineNumbers();
-    
-      const savedOutput = localStorage.getItem("miniDelOutput");
-      if (savedOutput) {
-        outputContent.textContent = savedOutput;
-        console.log("Loaded saved output from localStorage:", savedOutput);
-      }
-    });
-    
-    async function fetchWithTimeout(url, options, timeout = 20000) {
+// Updated script.js
+const codeInput = document.getElementById("code-input");
+const lineNumbers = document.getElementById("line-numbers");
+const outputContent = document.getElementById("output-content");
+const compileButton = document.getElementById("compile-button");
+const clearButton = document.getElementById("clear-output");
+const highlightLineDiv = document.querySelector(".highlight-line");
+
+function updateLineNumbers() {
+  const lines = codeInput.value.split("\n").length;
+  lineNumbers.innerHTML = '';
+  for (let i = 1; i <= lines; i++) {
+    const line = document.createElement('div');
+    line.textContent = i;
+    lineNumbers.appendChild(line);
+  }
+  syncScroll();
+}
+
+codeInput.addEventListener("input", updateLineNumbers);
+
+function highlightLine() {
+  const start = codeInput.selectionStart;
+  const startLine = codeInput.value.substring(0, start).split("\n").length - 1;
+
+  const lineHeight = parseFloat(getComputedStyle(codeInput).lineHeight);
+  const scrollOffset = codeInput.scrollTop;
+  const topOffset = startLine * lineHeight - scrollOffset;
+
+  highlightLineDiv.style.top = `${topOffset + 7}px`;
+  highlightLineDiv.style.height = `${lineHeight + 2}px`;
+}
+
+codeInput.addEventListener("scroll", () => {
+  syncScroll();
+  highlightLine();
+});
+
+function syncScroll() {
+  lineNumbers.scrollTop = codeInput.scrollTop;
+}
+
+codeInput.addEventListener("click", highlightLine);
+codeInput.addEventListener("keyup", highlightLine);
+
+window.addEventListener("load", () => {
+  const savedCode = localStorage.getItem("miniDelCode");
+  if (savedCode) codeInput.value = savedCode;
+  updateLineNumbers();
+
+  const savedOutput = localStorage.getItem("miniDelOutput");
+  if (savedOutput) {
+    outputContent.textContent = savedOutput;
+    console.log("Loaded saved output from localStorage:", savedOutput);
+  }
+});
+
+async function fetchWithTimeout(url, options, timeout = 20000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
   try {
@@ -281,99 +282,75 @@
   }
 }
 
-    
-    async function fetchWithRetry(url, options, retries = 5, delay = 5000) {
-      try {
-        const response = await fetchWithTimeout(url, options, 20000); // 20-second timeout
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        console.log("Fetch response received:", response);
-        return await response.json();
-      } catch (error) {
-        if (retries === 0) throw error;
-    
-        console.warn(`Retrying... (${retries} retries left). Error: ${error.message}`);
-        await new Promise((res) => setTimeout(res, delay));
-        return fetchWithRetry(url, options, retries - 1, delay * 1.5);
-      }
+async function fetchWithRetry(url, options, retries = 5, delay = 5000) {
+  try {
+    const response = await fetchWithTimeout(url, options, 20000); // 20-second timeout
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    console.log("Fetch response received:", response);
+    return await response.json();
+  } catch (error) {
+    if (retries === 0) throw error;
+
+    console.warn(`Retrying... (${retries} retries left). Error: ${error.message}`);
+    await new Promise((res) => setTimeout(res, delay));
+    return fetchWithRetry(url, options, retries - 1, delay * 1.5);
+  }
+}
+
+compileButton.addEventListener("click", async () => {
+  const code = codeInput.value;
+
+  if (!code.trim()) {
+    const errorMsg = "Error: Code editor is empty!";
+    console.error(errorMsg);
+    outputContent.textContent = errorMsg;
+    localStorage.setItem("miniDelOutput", errorMsg);
+    return;
+  }
+
+  console.log("Attempting to compile code:", code);
+
+  try {
+    const data = await fetchWithRetry("https://onlinecompiler-74qt.onrender.com/compile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+
+    if (data.output) {
+      console.log("Output received:", data.output);
+
+      // Update DOM and save to localStorage
+      outputContent.textContent = data.output;
+      localStorage.setItem("miniDelOutput", data.output);
+      console.log("Output successfully updated and saved to localStorage.");
+    } else {
+      const noOutputMessage = "No output received from the backend.";
+      console.warn(noOutputMessage);
+      outputContent.textContent = noOutputMessage;
+      localStorage.setItem("miniDelOutput", noOutputMessage);
     }
-    
-    async function checkBackendHealth() {
-      try {
-        const response = await fetchWithTimeout("http://localhost:3000/health", {}, 5000);
-        if (response.ok) {
-          console.log("Backend is healthy.");
-          return true;
-        } else {
-          console.warn("Backend health check failed.");
-          return false;
-        }
-      } catch (error) {
-        console.error("Error during backend health check:", error.message);
-        return false;
-      }
-    }
-    
-    compileButton.addEventListener("click", async () => {
-      const code = codeInput.value;
-    
-      if (!code.trim()) {
-        const errorMsg = "Error: Code editor is empty!";
-        console.error(errorMsg);
-        outputContent.textContent = errorMsg;
-        localStorage.setItem("miniDelOutput", errorMsg);
-        return;
-      }
-    
-      console.log("Checking backend health before compile...");
-      const isBackendHealthy = await checkBackendHealth();
-      if (!isBackendHealthy) {
-        outputContent.textContent = "Error: Backend is not reachable. Check your connection.";
-        localStorage.setItem("miniDelOutput", outputContent.textContent);
-        return;
-      }
-    
-      console.log("Attempting to compile code:", code);
-    
-      try {
-        const data = await fetchWithRetry("http://192.168.1.157:3000/compile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code }),
-        });
-    
-        if (data.output) {
-          console.log("Output received:", data.output);
-    
-          // Update DOM and save to localStorage
-          outputContent.textContent = data.output;
-          localStorage.setItem("miniDelOutput", data.output);
-          console.log("Output successfully updated and saved to localStorage.");
-        } else {
-          const noOutputMessage = "No output received from the backend.";
-          console.warn(noOutputMessage);
-          outputContent.textContent = noOutputMessage;
-          localStorage.setItem("miniDelOutput", noOutputMessage);
-        }
-      } catch (error) {
-        const errorMessage = `Error: Unable to compile the code. ${error.message}`;
-        console.error(errorMessage);
-        outputContent.textContent = errorMessage;
-        localStorage.setItem("miniDelOutput", errorMessage);
-      }
-    });
-    
-    clearButton.addEventListener("click", () => {
-      outputContent.textContent = "";
-      localStorage.removeItem("miniDelOutput");
-      console.log("Output cleared and localStorage updated.");
-    });
-    
-    codeInput.addEventListener("input", () => {
-      localStorage.setItem("miniDelCode", codeInput.value);
-      updateLineNumbers();
-    });
-    
-    updateLineNumbers();
+  } catch (error) {
+    const errorMessage = `Error: Unable to compile the code. ${error.message}`;
+    console.error(errorMessage);
+    outputContent.textContent = errorMessage;
+    localStorage.setItem("miniDelOutput", errorMessage);
+  }
+});
+
+clearButton.addEventListener("click", () => {
+  outputContent.textContent = "";
+  localStorage.removeItem("miniDelOutput");
+  console.log("Output cleared and localStorage updated.");
+});
+
+codeInput.addEventListener("input", () => {
+  localStorage.setItem("miniDelCode", codeInput.value);
+  updateLineNumbers();
+});
+
+updateLineNumbers();
+
     </script>
     
 </body>
