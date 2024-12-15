@@ -264,106 +264,45 @@ window.addEventListener("load", () => {
   }
 });
 
-async function fetchWithTimeout(url, options, timeout = 20000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  try {
-    const response = await fetch(url, { ...options, signal: controller.signal });
-    clearTimeout(id);
-    console.log("Response received:", response);
-    return response;
-  } catch (error) {
-    clearTimeout(id);
-    console.error("Fetch error:", error.message, error.name);
-    if (error.name === 'AbortError') {
-      console.error("Fetch request timed out");
+// Retry mechanism for fetch API calls
+async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) return response;
+      console.warn(`Attempt ${i + 1} failed: ${response.status}`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    } catch (error) {
+      console.error(`Error on attempt ${i + 1}:`, error);
     }
-    throw error;
   }
+  throw new Error('Max retries exceeded');
 }
 
-async function fetchWithRetry(url, options, retries = 5, delay = 5000) {
-  try {
-    const response = await fetchWithTimeout(url, options, 20000); // 20-second timeout
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-    console.log("Fetch response received:", response);
-    return await response.json();
-  } catch (error) {
-    if (retries === 0) throw error;
-
-    console.warn(`Retrying... (${retries} retries left). Error: ${error.message}`);
-    await new Promise((res) => setTimeout(res, delay));
-    return fetchWithRetry(url, options, retries - 1, delay * 1.5);
-  }
-}
-
-// Backend URL (use correct one based on environment)
-const BACKEND_URL = "https://onlinecompiler-74qt.onrender.com"; // Change to your backend URL
-const HEALTH_CHECK_URL = `${BACKEND_URL}/health`;
-
-async function checkBackendHealth() {
-  try {
-    const response = await fetchWithTimeout(HEALTH_CHECK_URL, {}, 5000);
-    if (response.ok) {
-      console.log("Backend is healthy.");
-      return true;
-    } else {
-      console.warn("Backend health check failed:", response.statusText);
-      return false;
-    }
-  } catch (error) {
-    console.error("Error during backend health check:", error.message);
-    return false;
-  }
-}
-
+// Compile button event handler
 compileButton.addEventListener("click", async () => {
   const code = codeInput.value;
+  const url = "https://onlinecompiler-74qt.onrender.com/compile";
 
-  if (!code.trim()) {
-    const errorMsg = "Error: Code editor is empty!";
-    console.error(errorMsg);
-    outputContent.textContent = errorMsg;
-    localStorage.setItem("miniDelOutput", errorMsg);
-    return;
-  }
-
-  console.log("Attempting to compile code:", code);
-
-  const isBackendHealthy = await checkBackendHealth();
-  if (!isBackendHealthy) {
-    const healthErrorMsg = "Error: Backend is not reachable. Check your connection.";
-    console.error(healthErrorMsg);
-    outputContent.textContent = healthErrorMsg;
-    localStorage.setItem("miniDelOutput", healthErrorMsg);
-    return;
-  }
+  outputContent.textContent = "Compiling...";
 
   try {
-    const data = await fetchWithRetry(`${BACKEND_URL}/compile`, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code })
     });
 
-    if (data.output) {
-      console.log("Output received:", data.output);
-
-      // Update DOM and save to localStorage
-      outputContent.textContent = data.output;
-      localStorage.setItem("miniDelOutput", data.output);
-      console.log("Output successfully updated and saved to localStorage.");
-    } else {
-      const noOutputMessage = "No output received from the backend.";
-      console.warn(noOutputMessage);
-      outputContent.textContent = noOutputMessage;
-      localStorage.setItem("miniDelOutput", noOutputMessage);
+    if (!response.ok) {
+      throw new Error(`Server responded with status ${response.status}`);
     }
+
+    const result = await response.json();
+    outputContent.textContent = result.output || "No output received.";
+    localStorage.setItem("savedOutput", result.output || "");
   } catch (error) {
-    const errorMessage = `Error: Unable to compile the code. ${error.message}`;
-    console.error(errorMessage);
-    outputContent.textContent = errorMessage;
-    localStorage.setItem("miniDelOutput", errorMessage);
+    console.error("Compilation error:", error);
+    outputContent.textContent = `Error: ${error.message}`;
   }
 });
 
