@@ -297,6 +297,26 @@ async function fetchWithRetry(url, options, retries = 5, delay = 5000) {
   }
 }
 
+// Backend URL (use correct one based on environment)
+const BACKEND_URL = "https://onlinecompiler-74qt.onrender.com"; // Change to your backend URL
+const HEALTH_CHECK_URL = `${BACKEND_URL}/health`;
+
+async function checkBackendHealth() {
+  try {
+    const response = await fetchWithTimeout(HEALTH_CHECK_URL, {}, 5000);
+    if (response.ok) {
+      console.log("Backend is healthy.");
+      return true;
+    } else {
+      console.warn("Backend health check failed:", response.statusText);
+      return false;
+    }
+  } catch (error) {
+    console.error("Error during backend health check:", error.message);
+    return false;
+  }
+}
+
 compileButton.addEventListener("click", async () => {
   const code = codeInput.value;
 
@@ -310,8 +330,17 @@ compileButton.addEventListener("click", async () => {
 
   console.log("Attempting to compile code:", code);
 
+  const isBackendHealthy = await checkBackendHealth();
+  if (!isBackendHealthy) {
+    const healthErrorMsg = "Error: Backend is not reachable. Check your connection.";
+    console.error(healthErrorMsg);
+    outputContent.textContent = healthErrorMsg;
+    localStorage.setItem("miniDelOutput", healthErrorMsg);
+    return;
+  }
+
   try {
-    const data = await fetchWithRetry("https://onlinecompiler-74qt.onrender.com/compile", {
+    const data = await fetchWithRetry(`${BACKEND_URL}/compile`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
@@ -337,6 +366,7 @@ compileButton.addEventListener("click", async () => {
     localStorage.setItem("miniDelOutput", errorMessage);
   }
 });
+
 
 clearButton.addEventListener("click", () => {
   outputContent.textContent = "";
