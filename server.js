@@ -39,7 +39,11 @@ app.post('/compile', async (req, res) => {
     const command = `./miniDEL < ${tempFilePath}`;
     exec(command, { shell: true, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
       // Clean up temp file
-      fs.unlinkSync(tempFilePath);
+      try {
+        fs.unlinkSync(tempFilePath); // Ensure temp file cleanup happens safely
+      } catch (unlinkError) {
+        console.error('Error deleting temp file:', unlinkError.message);
+      }
 
       if (error) {
         console.error('Command execution error:', error.message);
@@ -51,6 +55,11 @@ app.post('/compile', async (req, res) => {
     });
   } catch (error) {
     console.error('Error handling file operations or executing command:', error.message);
+    try {
+      if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath); // Cleanup even on failure
+    } catch (cleanupError) {
+      console.error('Error during cleanup:', cleanupError.message);
+    }
     return res.status(500).json({ output: 'Error: Internal server error.' });
   }
 });
