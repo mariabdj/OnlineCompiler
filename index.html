@@ -207,7 +207,8 @@
   </div>
 
   <script>
-// Updated script.js
+// Client-side script (script.js)
+
 const codeInput = document.getElementById("code-input");
 const lineNumbers = document.getElementById("line-numbers");
 const outputContent = document.getElementById("output-content");
@@ -306,7 +307,6 @@ compileButton.addEventListener("click", async () => {
   }
 });
 
-
 clearButton.addEventListener("click", () => {
   outputContent.textContent = "";
   localStorage.removeItem("miniDelOutput");
@@ -319,6 +319,7 @@ codeInput.addEventListener("input", () => {
 });
 
 updateLineNumbers();
+
 
     </script>
     

@@ -1,3 +1,4 @@
+// Server code (server.js)
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -59,3 +60,4 @@ app.get('/health', (req, res) => res.status(200).json({ message: 'Server is runn
 
 // Start the server
 app.listen(PORT, () => console.log(`Server is running on http://localhost:${PORT}`));
+
