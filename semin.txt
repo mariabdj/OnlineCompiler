@@ -1,0 +1,24 @@
+// Fichier 2 : Exemples avec erreurs sémantiques
+PROGRAMME Exem
+VAR{
+    INTEGER a, b, x;
+    FLOAT c;
+    CONST pi = 3.14;
+    //FLOAT F[1.2]; //Erreur valeur invalide
+    CONST h = (-5.6);
+    FLOAT tableau[10];
+    //INTEGER c; //Double déclaration
+}
+BEGIN
+    a = 0;
+    //b = a + z; // Erreur: Utilisation de "z" non déclaré
+    //tableau[11] = 10; // Erreur: Indice hors limites pour "tableau"
+    //pi = 3.15; // Erreur: Affectation à une constante
+    //c = a / 0; // Erreur: Division par zéro
+    c=1.2;
+    //x=c/a; // Erreur: Division par zéro
+    c=1.5;
+    a=c+2*(1/2); // Affectation entre types incompatibles
+
+END.
+
