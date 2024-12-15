@@ -28,23 +28,10 @@ app.post('/compile', async (req, res) => {
     return res.status(400).json({ output: 'Error: No code provided!' });
   }
 
-  const tempFilePath = createTempFilePath();
-
   try {
-    // Write code to a temporary file
-    fs.writeFileSync(tempFilePath, code);
-    console.log(`Code saved to temp file at ${tempFilePath}.`);
-
-    // Execute command using miniDEL compiler
-    const command = `./miniDEL < ${tempFilePath}`;
+    // Directly pass code to the command without file handling
+    const command = `echo "${code.replace(/"/g, '\\"')}" | ./miniDEL`;
     exec(command, { shell: true, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
-      // Clean up temp file
-      try {
-        fs.unlinkSync(tempFilePath); // Ensure temp file cleanup happens safely
-      } catch (unlinkError) {
-        console.error('Error deleting temp file:', unlinkError.message);
-      }
-
       if (error) {
         console.error('Command execution error:', error.message);
         return res.status(500).json({ output: `Error: ${error.message}` });
@@ -54,12 +41,7 @@ app.post('/compile', async (req, res) => {
       res.status(200).json({ output: stdout || stderr || 'No output generated.' });
     });
   } catch (error) {
-    console.error('Error handling file operations or executing command:', error.message);
-    try {
-      if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath); // Cleanup even on failure
-    } catch (cleanupError) {
-      console.error('Error during cleanup:', cleanupError.message);
-    }
+    console.error('Error during command execution:', error.message);
     return res.status(500).json({ output: 'Error: Internal server error.' });
   }
 });
@@ -69,4 +51,5 @@ app.get('/health', (req, res) => res.status(200).json({ message: 'Server is runn
 
 // Start the server
 app.listen(PORT, () => console.log(`Server is running on http://localhost:${PORT}`));
+
 
