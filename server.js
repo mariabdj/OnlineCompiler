@@ -3,14 +3,17 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const { exec } = require('child_process');
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const fs = require('fs');
 
-
 // Middleware configuration
 app.use(cors({ origin: '*', methods: ['GET', 'POST'], allowedHeaders: ['Content-Type'] }));
 app.use(bodyParser.json());
+
+// Ensure miniDEL executable path is correct
+const miniDELPath = path.resolve(__dirname, 'miniDEL.exe');
 
 // Endpoint to compile code
 app.post('/compile', async (req, res) => {
@@ -24,11 +27,11 @@ app.post('/compile', async (req, res) => {
 
   try {
     // Save code to a temporary file
-    const tempFilePath = './tempCode.txt';
+    const tempFilePath = path.resolve(__dirname, 'tempCode.txt');
     fs.writeFileSync(tempFilePath, code);
 
     // Execute the code using the external program
-    const command = `./miniDEL < ${tempFilePath}`;
+    const command = `${miniDELPath} < ${tempFilePath}`;
     exec(command, { shell: true, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
       fs.unlinkSync(tempFilePath); // Clean up temporary file
 
