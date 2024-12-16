@@ -266,7 +266,7 @@ window.addEventListener("load", () => {
 });
 
 // Retry mechanism for fetch API calls
-async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
+async function fetchWithRetry(url, options, retries = 3, delay = 100000) {
   for (let i = 0; i < retries; i++) {
     try {
       const response = await fetch(url, options);
