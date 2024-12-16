@@ -12,12 +12,16 @@ const PORT = process.env.PORT || 3000;
 // Middleware configuration
 app.use(cors({ origin: '*', methods: ['GET', 'POST'], allowedHeaders: ['Content-Type'] }));
 app.use(bodyParser.json());
+app.options('/compile', cors());
+
 
 // Ensure miniDEL executable path is correct
 const miniDELPath = path.resolve(__dirname, 'miniDEL'); // Remove .exe for Linux compatibility
 
 // Endpoint to compile code
 app.post('/compile', async (req, res) => {
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
   console.log('POST /compile called');
   const code = req.body.code;
 

@@ -301,6 +301,8 @@ compileButton.addEventListener("click", async () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
+      mode: "cors", // Ensures CORS requests are sent correctly
+
     }, 60000);
 
     if (!response.ok) {
