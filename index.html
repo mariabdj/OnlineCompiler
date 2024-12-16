@@ -285,6 +285,14 @@ compileButton.addEventListener("click", async () => {
   const code = codeInput.value;
   const url = "https://onlinecompiler-74qt.onrender.com/compile";
 
+  if (!code.trim()) {
+        const errorMsg = "Error: Code editor is empty!";
+        console.error(errorMsg);
+        outputContent.textContent = errorMsg;
+        localStorage.setItem("miniDelOutput", errorMsg);
+        return;
+      }
+
   outputContent.textContent = "Compiling...";
 
   try {
