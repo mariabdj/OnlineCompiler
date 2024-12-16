@@ -1,4 +1,4 @@
-
+// server.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -14,9 +14,8 @@ app.use(cors({ origin: '*', methods: ['GET', 'POST'], allowedHeaders: ['Content-
 app.use(bodyParser.json());
 app.options('/compile', cors());
 
-
 // Ensure miniDEL executable path is correct
-const miniDELPath = path.resolve(__dirname, 'miniDEL'); // Remove .exe for Linux compatibility
+const miniDELPath = path.resolve(__dirname, 'miniDEL'); // Adjust path based on deployment environment
 
 // Endpoint to compile code
 app.post('/compile', async (req, res) => {
@@ -35,26 +34,28 @@ app.post('/compile', async (req, res) => {
     const tempFilePath = path.resolve(__dirname, 'tempCode.txt');
     fs.writeFileSync(tempFilePath, code);
 
-    // Add execute permissions for miniDEL
-    exec(`chmod +x ${miniDELPath}`, (chmodError) => {
-      if (chmodError) {
-        console.error('chmod error:', chmodError.message);
-        return res.status(500).json({ output: `Error: ${chmodError.message}` });
+    // Ensure miniDEL is executable
+    if (process.platform !== 'win32') {
+      exec(`chmod +x ${miniDELPath}`, (chmodError) => {
+        if (chmodError) {
+          console.error('chmod error:', chmodError.message);
+          return res.status(500).json({ output: `Error: ${chmodError.message}` });
+        }
+      });
+    }
+
+    // Execute the code using the external program
+    const command = `${miniDELPath} < ${tempFilePath}`;
+    exec(command, { shell: true, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
+      fs.unlinkSync(tempFilePath); // Clean up temporary file
+
+      if (error) {
+        console.error('Command execution error:', error.message);
+        return res.status(500).json({ output: `Error: ${error.message}` });
       }
 
-      // Execute the code using the external program
-      const command = `${miniDELPath} < ${tempFilePath}`;
-      exec(command, { shell: true, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
-        fs.unlinkSync(tempFilePath); // Clean up temporary file
-
-        if (error) {
-          console.error('Command execution error:', error.message);
-          return res.status(500).json({ output: `Error: ${error.message}` });
-        }
-
-        console.log('Command executed successfully.');
-        res.status(200).json({ output: stdout || stderr || 'No output generated.' });
-      });
+      console.log('Command executed successfully.');
+      res.status(200).json({ output: stdout || stderr || 'No output generated.' });
     });
   } catch (error) {
     console.error('Error during command execution:', error.message);
@@ -67,4 +68,6 @@ app.get('/health', (req, res) => res.status(200).json({ message: 'Server is runn
 
 // Start the server
 app.listen(PORT, () => console.log(`Server is running on http://localhost:${PORT}`));
+
+
 

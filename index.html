@@ -209,6 +209,8 @@
   <script>
 // Client-side script (script.js)
 
+
+// script.js
 const codeInput = document.getElementById("code-input");
 const lineNumbers = document.getElementById("line-numbers");
 const outputContent = document.getElementById("output-content");
@@ -296,13 +298,11 @@ compileButton.addEventListener("click", async () => {
   outputContent.textContent = "Compiling... This may take up to a minute.";
 
   try {
-    // Send the request with a long timeout (60 seconds)
     const response = await fetchWithTimeout(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
       mode: "cors", // Ensures CORS requests are sent correctly
-
     }, 60000);
 
     if (!response.ok) {
