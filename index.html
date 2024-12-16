@@ -265,19 +265,19 @@ window.addEventListener("load", () => {
   }
 });
 
-// Retry mechanism for fetch API calls
-async function fetchWithRetry(url, options, retries = 3, delay = 100000) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const response = await fetch(url, options);
-      if (response.ok) return response;
-      console.warn(`Attempt ${i + 1} failed: ${response.status}`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    } catch (error) {
-      console.error(`Error on attempt ${i + 1}:`, error);
-    }
-  }
-  throw new Error('Max retries exceeded');
+// Fetch with timeout implementation
+function fetchWithTimeout(resource, options, timeout = 60000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  return fetch(resource, { ...options, signal: controller.signal })
+    .then(response => {
+      clearTimeout(id);
+      return response;
+    })
+    .catch(error => {
+      clearTimeout(id);
+      throw error;
+    });
 }
 
 // Compile button event handler
@@ -286,21 +286,22 @@ compileButton.addEventListener("click", async () => {
   const url = "https://onlinecompiler-74qt.onrender.com/compile";
 
   if (!code.trim()) {
-        const errorMsg = "Error: Code editor is empty!";
-        console.error(errorMsg);
-        outputContent.textContent = errorMsg;
-        localStorage.setItem("miniDelOutput", errorMsg);
-        return;
-      }
+    const errorMsg = "Error: Code editor is empty!";
+    console.error(errorMsg);
+    outputContent.textContent = errorMsg;
+    localStorage.setItem("miniDelOutput", errorMsg);
+    return;
+  }
 
-  outputContent.textContent = "Compiling...";
+  outputContent.textContent = "Compiling... This may take up to a minute.";
 
   try {
-    const response = await fetchWithRetry(url, {
+    // Send the request with a long timeout (60 seconds)
+    const response = await fetchWithTimeout(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code })
-    });
+      body: JSON.stringify({ code }),
+    }, 60000);
 
     if (!response.ok) {
       throw new Error(`Server responded with status ${response.status}`);
@@ -308,10 +309,14 @@ compileButton.addEventListener("click", async () => {
 
     const result = await response.json();
     outputContent.textContent = result.output || "No output received.";
-    localStorage.setItem("savedOutput", result.output || "");
+    localStorage.setItem("miniDelOutput", result.output || "");
   } catch (error) {
-    console.error("Compilation error:", error);
-    outputContent.textContent = `Error: ${error.message}`;
+    if (error.name === "AbortError") {
+      outputContent.textContent = "Error: Request timed out. Please try again.";
+    } else {
+      console.error("Compilation error:", error);
+      outputContent.textContent = `Error: ${error.message}`;
+    }
   }
 });
 
@@ -327,6 +332,7 @@ codeInput.addEventListener("input", () => {
 });
 
 updateLineNumbers();
+
 
     </script>
     
