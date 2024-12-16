@@ -1,73 +1,60 @@
 // server.js
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const { exec } = require('child_process');
-const path = require('path');
-const fs = require('fs');
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const { exec } = require("child_process");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware configuration
-app.use(cors({ origin: '*', methods: ['GET', 'POST'], allowedHeaders: ['Content-Type'] }));
+app.use(cors({ origin: "*", methods: ["GET", "POST"], allowedHeaders: ["Content-Type"] }));
 app.use(bodyParser.json());
-app.options('/compile', cors());
+app.options("/compile", cors());
 
-// Ensure miniDEL executable path is correct
-const miniDELPath = path.resolve(__dirname, 'miniDEL'); // Adjust path based on deployment environment
+const miniDELPath = path.resolve(__dirname, "miniDEL");
 
-// Endpoint to compile code
-app.post('/compile', async (req, res) => {
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
-  console.log('POST /compile called');
-  const code = req.body.code;
-
-  if (!code) {
-    console.error('No code provided!');
-    return res.status(400).json({ output: 'Error: No code provided!' });
-  }
-
-  try {
-    // Save code to a temporary file
-    const tempFilePath = path.resolve(__dirname, 'tempCode.txt');
-    fs.writeFileSync(tempFilePath, code);
-
-    // Ensure miniDEL is executable
-    if (process.platform !== 'win32') {
-      exec(`chmod +x ${miniDELPath}`, (chmodError) => {
-        if (chmodError) {
-          console.error('chmod error:', chmodError.message);
-          return res.status(500).json({ output: `Error: ${chmodError.message}` });
-        }
-      });
-    }
-
-    // Execute the code using the external program
-    const command = `${miniDELPath} < ${tempFilePath}`;
-    exec(command, { shell: true, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
-      fs.unlinkSync(tempFilePath); // Clean up temporary file
-
-      if (error) {
-        console.error('Command execution error:', error.message);
-        return res.status(500).json({ output: `Error: ${error.message}` });
-      }
-
-      console.log('Command executed successfully.');
-      res.status(200).json({ output: stdout || stderr || 'No output generated.' });
-    });
-  } catch (error) {
-    console.error('Error during command execution:', error.message);
-    return res.status(500).json({ output: 'Error: Internal server error.' });
+// Check if miniDEL exists and is executable
+if (!fs.existsSync(miniDELPath)) {
+  console.error("Error: miniDEL executable not found at", miniDELPath);
+  process.exit(1);
+}
+fs.access(miniDELPath, fs.constants.X_OK, (err) => {
+  if (err) {
+    console.error("Error: miniDEL is not executable. Please check permissions.", err);
+    process.exit(1);
   }
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => res.status(200).json({ message: 'Server is running!' }));
+app.post("/compile", async (req, res) => {
+  const code = req.body.code;
+  if (!code) {
+    return res.status(400).json({ output: "Error: No code provided!" });
+  }
 
-// Start the server
+  try {
+    const tempFilePath = path.resolve(__dirname, "tempCode.txt");
+    fs.writeFileSync(tempFilePath, code);
+
+    const command = `${miniDELPath} < ${tempFilePath}`;
+    exec(command, { shell: true, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
+      fs.unlinkSync(tempFilePath);
+      if (error) {
+        console.error("Command execution error:", error);
+        return res.status(500).json({ output: `Error: ${error.message}` });
+      }
+      res.status(200).json({ output: stdout || stderr || "No output generated." });
+    });
+  } catch (err) {
+    console.error("Unexpected server error:", err);
+    res.status(500).json({ output: "Error: Internal server error." });
+  }
+});
+
+app.get("/health", (req, res) => res.status(200).json({ message: "Server is running!" }));
+
 app.listen(PORT, () => console.log(`Server is running on http://localhost:${PORT}`));
 
-
-
+```
