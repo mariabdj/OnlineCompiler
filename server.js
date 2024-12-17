@@ -42,10 +42,10 @@ app.post("/compile", async (req, res) => {
   }
 
   try {
-    const tempFilePath = path.resolve(__dirname, "tempCode.txt");
+    const tempFilePath = path.resolve(__dirname, "tmp.txt");
     fs.writeFileSync(tempFilePath, code, { mode: 0o644 }); // Ensure the file is readable by all and writable by owner
 
-    const command = `./miniDEL tempCode.txt`; // Use the file as a direct argument
+    const command = `./miniDEL tmp.txt`; // Use the file as a direct argument
 
     console.log("Executing command:", command);
     const startTime = Date.now();
