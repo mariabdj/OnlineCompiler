@@ -45,7 +45,7 @@ app.post("/compile", async (req, res) => {
     console.log("Temporary file contents:", fs.readFileSync(tempFilePath, "utf-8"));
 
 
-    const command = `cat tmp.txt`;
+    const command = `./miniDEL < tmp`;
 
     console.log("Executing command:", command);
 
