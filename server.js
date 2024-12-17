@@ -45,7 +45,7 @@ app.post("/compile", async (req, res) => {
     const tempFilePath = path.resolve(__dirname, "tmp.txt");
     fs.writeFileSync(tempFilePath, code, { mode: 0o644 }); // Ensure the file is readable by all and writable by owner
 
-    const command = `${miniDELPath} < "${tempFilePath}"`; // Linux-style command to pipe the file's content as input to the executable
+    const command = `./miniDEL ${tempFilePath}`; 
 
     console.log("Executing command:", command);
     const startTime = Date.now();
