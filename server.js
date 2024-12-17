@@ -67,7 +67,6 @@ app.post("/compile", async (req, res) => {
         // Envoyer stdout avec une clé spécifique même en cas d'erreur
         return res.status(200).json({
           output,
-          error: error.message,
         });
       }
     
