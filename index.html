@@ -283,11 +283,12 @@ function fetchWithTimeout(resource, options, timeout = 60000) {
 }
 
 // Compile button event handler
+// Updated compile button handler
 compileButton.addEventListener("click", async () => {
-  const code = codeInput.value;
+  const code = codeInput.value.trim();
   const url = "https://onlinecompiler-74qt.onrender.com/compile";
 
-  if (!code.trim()) {
+  if (!code) {
     const errorMsg = "Error: Code editor is empty!";
     console.error(errorMsg);
     outputContent.textContent = errorMsg;
@@ -298,12 +299,16 @@ compileButton.addEventListener("click", async () => {
   outputContent.textContent = "Compiling... This may take up to a minute.";
 
   try {
-    const response = await fetchWithTimeout(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code }),
-      mode: "cors", // Ensures CORS requests are sent correctly
-    }, 60000);
+    const response = await fetchWithTimeout(
+      url,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+        mode: "cors",
+      },
+      60000
+    );
 
     if (!response.ok) {
       throw new Error(`Server responded with status ${response.status}`);
@@ -322,6 +327,7 @@ compileButton.addEventListener("click", async () => {
   }
 });
 
+
 clearButton.addEventListener("click", () => {
   outputContent.textContent = "";
   localStorage.removeItem("miniDelOutput");
@@ -334,6 +340,7 @@ codeInput.addEventListener("input", () => {
 });
 
 updateLineNumbers();
+
 
 
     </script>
