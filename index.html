@@ -264,22 +264,7 @@ window.addEventListener("load", () => {
   }
 });
 
-// Fetch with timeout implementation
-function fetchWithTimeout(resource, options, timeout = 60000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  return fetch(resource, { ...options, signal: controller.signal })
-    .then(response => {
-      clearTimeout(id);
-      return response;
-    })
-    .catch(error => {
-      clearTimeout(id);
-      throw error;
-    });
-}
 
-// Compile button event handler
 // Compile button handler
 compileButton.addEventListener("click", async () => {
   const code = codeInput.value.trim();
@@ -299,12 +284,23 @@ compileButton.addEventListener("click", async () => {
 
     if (!response.ok) throw new Error(`Server error: ${response.status}`);
     const result = await response.json();
-    outputContent.textContent = result.output || "No output received.";
+
+    // Afficher le contenu de `stdout`
+    outputContent.textContent = result.output;
+
+    // Optionnel : afficher les erreurs supplémentaires si disponibles
+    if (result.error) {
+      console.warn(`Compilation warning: ${result.error}`);
+      outputContent.textContent += `\n\n[Warning]: ${result.error}`;
+    }
+
+    // Sauvegarder la sortie dans localStorage
     localStorage.setItem("miniDelOutput", result.output || "");
   } catch (err) {
     outputContent.textContent = `Error: ${err.message}`;
   }
 });
+
 
 clearButton.addEventListener("click", () => {
   outputContent.textContent = "";

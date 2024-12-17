@@ -51,18 +51,30 @@ app.post("/compile", async (req, res) => {
 
     exec(command, { cwd: __dirname, timeout: 10000 }, (error, stdout, stderr) => {
       fs.unlinkSync(tempFilePath); // Clean up temp file
-
-      if (error) {
-        console.error("Execution error:", error);
-        console.error("stderr:", stderr); // Ajout de la sortie standard des erreurs
-        console.error("stdout:", stdout); // Ajout de la sortie standard
-        return res.status(500).json({ output: `Execution error: ${error.message}` });
-      }
-
+    
+      // Récupérer la sortie principale (stdout ou stderr)
       const output = stdout || stderr || "No output generated.";
+    
+      // Log utile pour le serveur
       console.log("Command output:", output);
+    
+      // Toujours envoyer la sortie à `script.js`
+      if (error) {
+        console.error("Execution error:", error.message);
+        console.error("stderr:", stderr);
+        console.error("stdout:", stdout);
+    
+        // Envoyer stdout avec une clé spécifique même en cas d'erreur
+        return res.status(200).json({
+          output,
+          error: error.message,
+        });
+      }
+    
+      // Cas succès, envoyer uniquement stdout
       res.status(200).json({ output });
     });
+    
   } catch (err) {
     console.error("Unexpected server error:", err);
     res.status(500).json({ output: "Internal server error." });
