@@ -36,10 +36,10 @@ app.post("/compile", async (req, res) => {
 
   try {
     const tempFilePath = path.resolve(__dirname, "tempCode.txt");
-    fs.writeFileSync(tempFilePath, code, { mode: 0o644 }); // Ensure the file is readable
+    fs.writeFileSync(tempFilePath, code, { mode: 0o644 }); // Ensure the file is readable by all and writable by owner
 
-    const command = `${miniDELPath} < ${tempFilePath}`;
-    exec(command, { shell: true, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
+    const command = `./miniDEL ${tempFilePath}`; // Use the file as a direct argument
+    exec(command, { cwd: __dirname, shell: true, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
       fs.unlinkSync(tempFilePath); // Clean up the temporary file
       if (error) {
         console.error("Command execution error:", error);
