@@ -16,17 +16,17 @@ app.options("/compile", cors());
 
 const miniDELPath = path.resolve(__dirname, "miniDEL");
 
-// Check if miniDEL exists and is executable
-if (!fs.existsSync(miniDELPath)) {
-  console.error("Error: miniDEL executable not found at", miniDELPath);
-  process.exit(1);
-}
-fs.access(miniDELPath, fs.constants.X_OK, (err) => {
-  if (err) {
-    console.error("Error: miniDEL is not executable. Please check permissions.", err);
+// Ensure miniDEL has the necessary permissions
+try {
+  if (!fs.existsSync(miniDELPath)) {
+    console.error("Error: miniDEL executable not found at", miniDELPath);
     process.exit(1);
   }
-});
+  fs.chmodSync(miniDELPath, "755"); // Grant read, write, and execute permissions to owner, and read+execute to others
+} catch (err) {
+  console.error("Error setting permissions for miniDEL:", err);
+  process.exit(1);
+}
 
 app.post("/compile", async (req, res) => {
   const code = req.body.code;
@@ -36,11 +36,11 @@ app.post("/compile", async (req, res) => {
 
   try {
     const tempFilePath = path.resolve(__dirname, "tempCode.txt");
-    fs.writeFileSync(tempFilePath, code);
+    fs.writeFileSync(tempFilePath, code, { mode: 0o644 }); // Ensure the file is readable
 
     const command = `${miniDELPath} < ${tempFilePath}`;
     exec(command, { shell: true, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
-      fs.unlinkSync(tempFilePath);
+      fs.unlinkSync(tempFilePath); // Clean up the temporary file
       if (error) {
         console.error("Command execution error:", error);
         return res.status(500).json({ output: `Error: ${error.message}` });
