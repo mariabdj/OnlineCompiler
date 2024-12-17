@@ -29,6 +29,17 @@ app.use((req, res, next) => {
   next();
 });
 
+// Vérification des dépendances ici
+exec(`ldd ./miniDEL`, (error, stdout, stderr) => {
+  if (error) {
+    console.error("Error checking miniDEL dependencies:", error.message);
+    console.error("stderr:", stderr);
+  } else {
+    console.log("miniDEL dependencies:");
+    console.log(stdout);
+  }
+});
+
 // Compilation route
 app.post("/compile", async (req, res) => {
   const code = req.body.code;
@@ -41,7 +52,10 @@ app.post("/compile", async (req, res) => {
   try {
     fs.writeFileSync(tempFilePath, code, { mode: 0o644 });
 
-    const command = `cat ${tempFilePath} | ./miniDEL`;
+    console.log("Temporary file contents:", fs.readFileSync(tempFilePath, "utf-8"));
+
+
+    const command = `./miniDEL < tmp.txt`;
 
     console.log("Executing command:", command);
 
