@@ -41,7 +41,8 @@ app.post("/compile", async (req, res) => {
   try {
     fs.writeFileSync(tempFilePath, code, { mode: 0o644 });
 
-    const command = `./miniDEL ${tempFilePath}`;
+    const command = `cat ${tempFilePath} | ./miniDEL`;
+
     console.log("Executing command:", command);
 
     exec(command, { cwd: __dirname, timeout: 10000 }, (error, stdout, stderr) => {
