@@ -1,4 +1,4 @@
-// Updated server.js
+// server.js
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -10,10 +10,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware configuration
-app.use(cors({ origin: "*" })); // Allow cross-origin requests
+app.use(cors({ origin: "*", methods: ["GET", "POST"], allowedHeaders: ["Content-Type"] }));
 app.use(bodyParser.json());
+app.options("/compile", cors());
 
-// Path to miniDEL executable
 const miniDELPath = path.resolve(__dirname, "miniDEL");
 
 // Ensure miniDEL has the necessary permissions
@@ -22,54 +22,53 @@ try {
     console.error("Error: miniDEL executable not found at", miniDELPath);
     process.exit(1);
   }
-  fs.chmodSync(miniDELPath, 0o755); // Ensure the executable is readable and executable
+  fs.chmodSync(miniDELPath, "755"); // Grant read, write, and execute permissions to owner, and read+execute to others
 } catch (err) {
   console.error("Error setting permissions for miniDEL:", err);
   process.exit(1);
 }
 
-// Compilation endpoint
+// Enhanced logging for debugging
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url} at ${new Date().toISOString()}`);
+  next();
+});
+
 app.post("/compile", async (req, res) => {
   const code = req.body.code;
-
   if (!code) {
-    console.error("Error: No code provided in the request body.");
+    console.error("Error: No code provided in request body.");
     return res.status(400).json({ output: "Error: No code provided!" });
   }
 
-  const tempFilePath = path.resolve(__dirname, "tempCode.txt");
-
   try {
-    // Write code to temporary file
-    fs.writeFileSync(tempFilePath, code, { mode: 0o644 }); // Ensure file has proper permissions
+    const tempFilePath = path.resolve(__dirname, "tempCode.txt");
+    fs.writeFileSync(tempFilePath, code, { mode: 0o644 }); // Ensure the file is readable by all and writable by owner
 
-    const command = `./miniDEL ${tempFilePath}`; // Execute miniDEL with the file
-    console.log(`Executing command: ${command}`);
+    const command = `./miniDEL ${tempFilePath}`; // Use the file as a direct argument
 
-    exec(
-      command,
-      { cwd: __dirname, shell: true, maxBuffer: 1024 * 1024 },
-      (error, stdout, stderr) => {
-        fs.unlinkSync(tempFilePath); // Clean up the temporary file
-        if (error) {
-          console.error("Execution error:", error.message);
-          return res
-            .status(500)
-            .json({ output: `Execution error: ${stderr || error.message}` });
-        }
+    console.log("Executing command:", command);
+    const startTime = Date.now();
 
-        console.log("Command output:", stdout || stderr);
-        res.status(200).json({ output: stdout || stderr || "No output generated." });
+    exec(command, { cwd: __dirname, shell: true, maxBuffer: 1024 * 1024, timeout: 60000 }, (error, stdout, stderr) => {
+      const executionTime = Date.now() - startTime;
+      console.log(`Command executed in ${executionTime}ms.`);
+      fs.unlinkSync(tempFilePath); // Clean up the temporary file
+
+      if (error) {
+        console.error("Command execution error:", error);
+        return res.status(500).json({ output: `Error: ${error.message}` });
       }
-    );
+
+      res.status(200).json({ output: stdout || stderr || "No output generated." });
+    });
   } catch (err) {
-    console.error("Unexpected server error:", err.message);
+    console.error("Unexpected server error:", err);
     res.status(500).json({ output: "Error: Internal server error." });
   }
 });
 
-// Health check endpoint
 app.get("/health", (req, res) => res.status(200).json({ message: "Server is running!" }));
 
-// Start the server
-app.listen(PORT, () => console.log(`Server is running on http://localhost:${PORT}`));
+// Enhanced server startup logging
+app.listen(PORT, () => console.log(`Server is running on http://localhost:${PORT} at ${new Date().toISOString()}`));
