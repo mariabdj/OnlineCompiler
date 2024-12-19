@@ -11,7 +11,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@codemirror/basic-setup": "^0.20.0",
+    "@codemirror/highlight": "^0.19.8",
+    "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/language": "^6.10.7",
+    "@codemirror/stream-parser": "^0.19.9",
+    "@codemirror/view": "^6.36.0",
+    "@vue/cli-service": "^3.3.1",
     "body-parser": "^1.20.3",
+    "codemirror": "^6.0.1",
     "cors": "^2.8.5",
     "express": "^4.21.2"
   }

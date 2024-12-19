@@ -4,319 +4,163 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>miniDEL Online Compiler</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      background-color: #f0f8ff;
-    }
-
-    .title {
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      color: #4a90e2;
-      padding: 15px 0;
-      background-color: #e3f2fd;
-      border-bottom: 2px solid #90caf9;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .container {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .editor {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background-color: #ffffff;
-      border-right: 1px solid #ddd;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .output {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background-color: #ffffff;
-      overflow: hidden;
-    }
-
-    .code-editor {
-      flex: 1;
-      display: flex;
-      position: relative;
-      overflow: auto;
-    }
-
-    .line-numbers {
-      background-color: #f7f7f7;
-      color: #888;
-      padding: 10px 10px 10px 5px;
-      text-align: right;
-      user-select: none;
-      font-family: monospace;
-      overflow: hidden;
-      flex-shrink: 0;
-      line-height: 1.6;
-      border-right: 1px solid #ddd;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-    }
-
-    .line-numbers div {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .code-input {
-      flex: 1;
-      font-family: monospace;
-      font-size: 14px;
-      padding: 10px;
-      border: none;
-      outline: none;
-      resize: none;
-      line-height: 1.5em;
-      background-color: #fdfdfd;
-      overflow: auto;
-      white-space: pre;
-    }
-
-    .code-input:focus {
-      outline: 2px solid #6ca0dc;
-    }
-
-    .highlight-line {
-      position: absolute;
-      background-color: rgba(211, 211, 211, 0.5);
-      z-index: 1;
-      pointer-events: none;
-      width: 100%;
-      height: 1.5;
-    }
-
-    .output-header {
-      background-color: #e3f2fd;
-      padding: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .output-content {
-      flex: 1;
-      padding: 10px;
-      overflow: auto;
-      font-family: monospace;
-      background-color: #fefefe;
-      border-top: 1px solid #ddd;
-      white-space: pre; /* Added to prevent automatic line breaks */
-      overflow-x: auto; /* Added to enable horizontal scrolling for long lines */
-    }
-
-    button {
-      background-color: #4a90e2;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    button:hover {
-      background-color: #357ab8;
-    }
-
-    .compile-button {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-    }
-
-    .editor-header {
-      background-color: #e3f2fd;
-      padding: 10px;
-      padding-bottom: 25px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .code-editor {
-      overflow: hidden;
-    }
-
-    @media (max-width: 768px) {
-      .container {
-        flex-direction: column;
-      }
-
-      .editor-header .tabs {
-        display: flex;
-      }
-
-      .output-header .tabs {
-        display: flex;
-      }
-
-      .editor, .output {
-        display: none;
-      }
-
-      .editor.active, .output.active {
-        display: flex;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="title">miniDEL Online Compiler</div>
   <div class="container">
     <div class="editor" id="editor">
       <div class="editor-header">
-        <div>miniDel</div>
+        <div class="tcodeeditor">Code Editor</div>
         <button id="compile-button" class="compile-button">COMPILE</button>
+        <label class="theme-switch">
+          <input class="theme-switch__checkbox" type="checkbox" />
+          <div class="theme-switch__container">
+            <div class="theme-switch__clouds"></div>
+            <div class="theme-switch__stars-container">
+              <svg fill="none" viewBox="0 0 144 55" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  fill="currentColor"
+                  d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56303 136.996 8.72727C136.996 7.95722 137.172 7.25134 137.525 6.59129C137.886 5.93124 138.372 5.39954 138.98 5.00535C139.598 4.60199 140.268 4.39114 141 4.35447C139.88 4.2903 138.936 3.85027 138.16 3.00688C137.384 2.16348 136.996 1.16425 136.996 0C136.996 1.16425 136.607 2.16348 135.831 3.00688ZM31 23.3545C32.1114 23.2995 33.0551 22.8503 33.8313 22.0069C34.6075 21.1635 34.9956 20.1642 34.9956 19C34.9956 20.1642 35.3837 21.1635 36.1599 22.0069C36.9361 22.8503 37.8798 23.2903 39 23.3545C38.2679 23.3911 37.5976 23.602 36.9802 24.0053C36.3716 24.3995 35.8864 24.9312 35.5248 25.5913C35.172 26.2513 34.9956 26.9572 34.9956 27.7273C34.9956 26.563 34.6075 25.5546 33.8313 24.7112C33.0551 23.8587 32.1114 23.4095 31 23.3545ZM0 36.3545C1.11136 36.2995 2.05513 35.8503 2.83131 35.0069C3.6075 34.1635 3.99559 33.1642 3.99559 32C3.99559 33.1642 4.38368 34.1635 5.15987 35.0069C5.93605 35.8503 6.87982 36.2903 8 36.3545C7.26792 36.3911 6.59757 36.602 5.98015 37.0053C5.37155 37.3995 4.88644 37.9312 4.52481 38.5913C4.172 39.2513 3.99559 39.9572 3.99559 40.7273C3.99559 39.563 3.6075 38.5546 2.83131 37.7112C2.05513 36.8587 1.11136 36.4095 0 36.3545ZM56.8313 24.0069C56.0551 24.8503 55.1114 25.2995 54 25.3545C55.1114 25.4095 56.0551 25.8587 56.8313 26.7112C57.6075 27.5546 57.9956 28.563 57.9956 29.7273C57.9956 28.9572 58.172 28.2513 58.5248 27.5913C58.8864 26.9312 59.3716 26.3995 59.9802 26.0053C60.5976 25.602 61.2679 25.3911 62 25.3545C60.8798 25.2903 59.9361 24.8503 59.1599 24.0069C58.3837 23.1635 57.9956 22.1642 57.9956 21C57.9956 22.1642 57.6075 23.1635 56.8313 24.0069ZM81 25.3545C82.1114 25.2995 83.0551 24.8503 83.8313 24.0069C84.6075 23.1635 84.9956 22.1642 84.9956 21C84.9956 22.1642 85.3837 23.1635 86.1599 24.0069C86.9361 24.8503 87.8798 25.2903 89 25.3545C88.2679 25.3911 87.5976 25.602 86.9802 26.0053C86.3716 26.3995 85.8864 26.9312 85.5248 27.5913C85.172 28.2513 84.9956 28.9572 84.9956 29.7273C84.9956 28.563 84.6075 27.5546 83.8313 26.7112C83.0551 25.8587 82.1114 25.4095 81 25.3545ZM136 36.3545C137.111 36.2995 138.055 35.8503 138.831 35.0069C139.607 34.1635 139.996 33.1642 139.996 32C139.996 33.1642 140.384 34.1635 141.16 35.0069C141.936 35.8503 142.88 36.2903 144 36.3545C143.268 36.3911 142.598 36.602 141.98 37.0053C141.372 37.3995 140.886 37.9312 140.525 38.5913C140.172 39.2513 139.996 39.9572 139.996 40.7273C139.996 39.563 139.607 38.5546 138.831 37.7112C138.055 36.8587 137.111 36.4095 136 36.3545ZM101.831 49.0069C101.055 49.8503 100.111 50.2995 99 50.3545C100.111 50.4095 101.055 50.8587 101.831 51.7112C102.607 52.5546 102.996 53.563 102.996 54.7273C102.996 53.9572 103.172 53.2513 103.525 52.5913C103.886 51.9312 104.372 51.3995 104.98 51.0053C105.598 50.602 106.268 50.3911 107 50.3545C105.88 50.2903 104.936 49.8503 104.16 49.0069C103.384 48.1635 102.996 47.1642 102.996 46C102.996 47.1642 102.607 48.1635 101.831 49.0069Z"
+                  clip-rule="evenodd"
+                  fill-rule="evenodd"
+                ></path>
+              </svg>
+            </div>
+            <div class="theme-switch__circle-container">
+              <div class="theme-switch__sun-moon-container">
+                <div class="theme-switch__moon">
+                  <div class="theme-switch__spot"></div>
+                  <div class="theme-switch__spot"></div>
+                  <div class="theme-switch__spot"></div>
+                </div>
+              </div>
+            </div>
+            <div class="theme-switch__shooting-star"></div>
+            <div class="theme-switch__shooting-star-2"></div>
+            <div class="theme-switch__meteor"></div>
+            <div class="theme-switch__stars-cluster">
+              <div class="star"></div>
+              <div class="star"></div>
+              <div class="star"></div>
+              <div class="star"></div>
+              <div class="star"></div>
+            </div>
+            <div class="theme-switch__aurora"></div>
+            <div class="theme-switch__comets">
+              <div class="comet"></div>
+              <div class="comet"></div>
+            </div>
+          </div>
+        </label>
+<div class="icon-conatiner"  id="save-button">
+  <svg
+    width="19px"
+    height="21px"
+    viewBox="0 0 19 21"
+    version="1.1"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+  >
+    <title>Group</title>
+    <g
+      id="Page-1"
+      stroke="none"
+      stroke-width="1"
+      fill="none"
+      fill-rule="evenodd"
+    >
+      <g id="Artboard" transform="translate(-142.000000, -122.000000)">
+        <g id="Group" transform="translate(142.000000, 122.000000)">
+          <path
+            d="M3.4,4 L11.5,4 L11.5,4 L16,8.25 L16,17.6 C16,19.4777681 14.4777681,21 12.6,21 L3.4,21 C1.52223185,21 6.74049485e-16,19.4777681 0,17.6 L0,7.4 C2.14128934e-16,5.52223185 1.52223185,4 3.4,4 Z"
+            id="Rectangle-Copy"
+            fill="#86b3e7"
+          ></path>
+          <path
+            d="M6.4,0 L12,0 L12,0 L19,6.5 L19,14.6 C19,16.4777681 17.4777681,18 15.6,18 L6.4,18 C4.52223185,18 3,16.4777681 3,14.6 L3,3.4 C3,1.52223185 4.52223185,7.89029623e-16 6.4,0 Z"
+            id="Rectangle"
+            fill="#86b3e7"
+          ></path>
+          <path
+            d="M12,0 L12,5.5 C12,6.05228475 12.4477153,6.5 13,6.5 L19,6.5 L19,6.5 L12,0 Z"
+            id="Path-2"
+            fill="#4a90e2"
+          ></path>
+        </g>
+      </g>
+    </g>
+  </svg>
+  <svg
+    width="19px"
+    height="21px"
+    viewBox="0 0 19 21"
+    version="1.1"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+  >
+    <title>Group</title>
+    <g
+      id="Page-1"
+      stroke="none"
+      stroke-width="1"
+      fill="none"
+      fill-rule="evenodd"
+    >
+      <g id="Artboard" transform="translate(-142.000000, -122.000000)">
+        <g id="Group" transform="translate(142.000000, 122.000000)">
+          <path
+            d="M3.4,4 L11.5,4 L11.5,4 L16,8.25 L16,17.6 C16,19.4777681 14.4777681,21 12.6,21 L3.4,21 C1.52223185,21 6.74049485e-16,19.4777681 0,17.6 L0,7.4 C2.14128934e-16,5.52223185 1.52223185,4 3.4,4 Z"
+            id="Rectangle-Copy"
+            fill="#86b3e7"
+          ></path>
+          <path
+            d="M6.4,0 L12,0 L12,0 L19,6.5 L19,14.6 C19,16.4777681 17.4777681,18 15.6,18 L6.4,18 C4.52223185,18 3,16.4777681 3,14.6 L3,3.4 C3,1.52223185 4.52223185,7.89029623e-16 6.4,0 Z"
+            id="Rectangle"
+            fill="#4a90e2"
+          ></path>
+          <path
+            d="M12,0 L12,5.5 C12,6.05228475 12.4477153,6.5 13,6.5 L19,6.5 L19,6.5 L12,0 Z"
+            id="Path-2"
+            fill="#4a90e2"
+          ></path>
+        </g>
+      </g>
+    </g>
+  </svg>
+</div>
+
       </div>
       <div class="code-editor">
-        <div class="line-numbers" id="line-numbers"></div>
         <textarea id="code-input" class="code-input" placeholder="Write your code here..." wrap="off"></textarea>
-        <div class="highlight-line"></div>
       </div>
     </div>
 
     <div class="output" id="output">
       <div class="output-header">
-        <div>Output</div>
-        <button id="clear-output">Clear</button>
+        <div class="toutput">Output</div>
+        <button id="clear-output" class="clear">Clear</button>
       </div>
-      <div class="output-content" id="output-content"></div>
-    </div>
+      <div class="output-container" id="output-container">   
+        <!-- Output content container -->
+        <div class="output-content" id="output-content">
+          <!-- Output will be displayed here -->
+        </div>
+      </div>
+      <div id="loading-hand" class="typewriter">
+        <div class="slide"><i></i></div>
+        <div class="paper"></div>
+        <div class="keyboard"></div>
+        <p>Compiling</p>
+    </div>    
+</div>
+
   </div>
-
-  <script>
-// script.js
-const codeInput = document.getElementById("code-input");
-const lineNumbers = document.getElementById("line-numbers");
-const outputContent = document.getElementById("output-content");
-const compileButton = document.getElementById("compile-button");
-const clearButton = document.getElementById("clear-output");
-const highlightLineDiv = document.querySelector(".highlight-line");
-
-function updateLineNumbers() {
-  const lines = codeInput.value.split("\n").length;
-  lineNumbers.innerHTML = '';
-  for (let i = 1; i <= lines; i++) {
-    const line = document.createElement('div');
-    line.textContent = i;
-    lineNumbers.appendChild(line);
-  }
-  syncScroll();
-}
-
-codeInput.addEventListener("input", updateLineNumbers);
-
-function highlightLine() {
-  const start = codeInput.selectionStart;
-  const startLine = codeInput.value.substring(0, start).split("\n").length - 1;
-
-  const lineHeight = parseFloat(getComputedStyle(codeInput).lineHeight);
-  const scrollOffset = codeInput.scrollTop;
-  const topOffset = startLine * lineHeight - scrollOffset;
-
-  highlightLineDiv.style.top = `${topOffset + 7}px`;
-  highlightLineDiv.style.height = `${lineHeight + 2}px`;
-}
-
-codeInput.addEventListener("scroll", () => {
-  syncScroll();
-  highlightLine();
-});
-
-function syncScroll() {
-  lineNumbers.scrollTop = codeInput.scrollTop;
-}
-
-codeInput.addEventListener("click", highlightLine);
-codeInput.addEventListener("keyup", highlightLine);
-
-window.addEventListener("load", () => {
-  const savedCode = localStorage.getItem("miniDelCode");
-  if (savedCode) codeInput.value = savedCode;
-  updateLineNumbers();
-
-  const savedOutput = localStorage.getItem("miniDelOutput");
-  if (savedOutput) {
-    outputContent.textContent = savedOutput;
-    console.log("Loaded saved output from localStorage:", savedOutput);
-  }
-});
-
-
-// Compile button handler
-compileButton.addEventListener("click", async () => {
-  const code = codeInput.value.trim();
-  if (!code) {
-    outputContent.textContent = "Error: Code editor is empty!";
-    return;
-  }
-
-  outputContent.textContent = "Compiling...";
-
-  try {
-    const response = await fetch("https://onlinecompiler-74qt.onrender.com/compile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code }),
-    });
-
-    if (!response.ok) throw new Error(`Server error: ${response.status}`);
-    const result = await response.json();
-
-    // Afficher le contenu de `stdout`
-    outputContent.textContent = result.output;
-
-    // Optionnel : afficher les erreurs supplémentaires si disponibles
-    if (result.error) {
-      console.warn(`Compilation warning: ${result.error}`);
-      outputContent.textContent += `\n\n[Warning]: ${result.error}`;
-    }
-
-    // Sauvegarder la sortie dans localStorage
-    localStorage.setItem("miniDelOutput", result.output || "");
-  } catch (err) {
-    outputContent.textContent = `Error: ${err.message}`;
-  }
-});
-
-
-clearButton.addEventListener("click", () => {
-  outputContent.textContent = "";
-  localStorage.removeItem("miniDelOutput");
-  console.log("Output cleared and localStorage updated.");
-});
-
-codeInput.addEventListener("input", () => {
-  console.log("Code input updated.");
-  localStorage.setItem("miniDelCode", codeInput.value);
-  updateLineNumbers();
-});
-
-updateLineNumbers();
-
-    </script>
-    
+     <!-- Include CodeMirror JavaScript -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script> 
+     <script src="simple.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
