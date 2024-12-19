@@ -9,8 +9,6 @@ const fs = require("fs");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware configuration
-const cors = require("cors");
 
 const corsOptions = {
   origin: "*", // Allow all origins (can be restricted to specific origins)
