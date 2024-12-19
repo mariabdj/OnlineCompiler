@@ -10,9 +10,24 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware configuration
-app.use(cors({ origin: "*", methods: ["GET", "POST"], allowedHeaders: ["Content-Type"] }));
+const cors = require("cors");
+
+const corsOptions = {
+  origin: "*", // Allow all origins (can be restricted to specific origins)
+  methods: ["GET", "POST", "OPTIONS"], // Specify allowed methods
+  allowedHeaders: ["Content-Type", "Authorization"], // Allow necessary headers
+  preflightContinue: false,
+  optionsSuccessStatus: 204, // Status for successful preflight
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
-app.options("/compile", cors());
+app.options("/compile", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  res.sendStatus(204); // Respond with "No Content"
+});
 
 const miniDELPath = path.resolve(__dirname, "miniDEL");
 
