@@ -36,7 +36,7 @@ CodeMirror.defineMode("customMode", function(config, parserConfig) {
 // Initialize CodeMirror with custom mode
 const editor = CodeMirror.fromTextArea(document.getElementById("code-input"), {
     mode: "customMode",
-    theme: "default", // Choose a theme or add a custom one
+    theme: "default",
     lineNumbers: true,
     matchBrackets: true,
     autoCloseBrackets: true,
